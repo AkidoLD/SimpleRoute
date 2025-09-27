@@ -1,0 +1,20 @@
+# Composer
+/vendor/
+composer.lock
+
+# IDE / éditeurs
+/.idea/
+/.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Tests / Coverage
+/phpunit.xml
+/phpunit.xml.dist
+/.phpunit.result.cache
+/coverage/
+/.cache/

@@ -1,0 +1,13 @@
+{
+    "name": "akido-ld/simple-route",
+    "description": "A simple and visual PHP routing library",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "SimpleRoute\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=8.0"
+    }
+}  
