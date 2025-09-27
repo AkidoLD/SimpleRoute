@@ -1,13 +1,14 @@
 {
     "name": "akido-ld/simple-route",
-    "description": "A simple and visual PHP routing library",
+    "description": "A simple PHP routing library",
     "type": "library",
+    "require": {
+        "php": "^8.1",
+        "ramsey/uuid": "^4.7"
+    },
     "autoload": {
         "psr-4": {
             "SimpleRoute\\": "src/"
         }
-    },
-    "require": {
-        "php": ">=8.0"
     }
-}  
+}
