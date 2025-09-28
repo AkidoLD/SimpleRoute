@@ -198,6 +198,30 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
     public function offsetExists(mixed $offset): bool {
         return isset($this->children[$offset]);
     }
+
+    /**
+     * Sets a child Node at the given offset.
+     *
+     * This method implements ArrayAccess::offsetSet, allowing you to add a child
+     * Node to this Node using array syntax.
+     * 
+     * Behavior:
+     * - The `$value` must always be an instance of `Node`.
+     * - The `$offset` is optional. If provided, it **must** match the key of the Node.
+     *   Otherwise, a `NodeChildKeyMismatchException` will be thrown.
+     * - If `$offset` is null, the child Node will be stored using its key automatically.
+     *
+     * Example usage:
+     *   $node[$child->getKey()] = $child; // recommended
+     *   $node[] = $child;                 // works, key is taken from child
+     *
+     * @param mixed $offset The key to store the child at (must match the child's key if provided).
+     * @param mixed $value The Node instance to add as a child.
+     * 
+     * @throws NodeChildIsNotANode If $value is not a Node instance.
+     * @throws NodeChildKeyMismatchException If the $offset does not match the Node's key.
+     * @return void
+     */
     public function offsetSet(mixed $offset, mixed $value): void {
         if (!($value instanceof Node)) {
             throw new NodeChildIsNotANode(
