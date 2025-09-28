@@ -12,6 +12,36 @@ use SimpleRoute\Exceptions\NodeChildIsNotANode;
 use SimpleRoute\Exceptions\NodeChildKeyMismatchException;
 use SimpleRoute\Exceptions\NodeHandlerNotSet;
 
+/**
+ * Represents a node in a routing tree.
+ *
+ * A `Node` acts as a junction point in the route structure. 
+ * It can hold multiple children (other `Node` instances) and an optional handler
+ * that will be executed when the corresponding route is reached.
+ *
+ * Each `Node` has a key unique within its parent and a globally unique UUID
+ * to distinguish it from other nodes that may share the same key.
+ *
+ * Implements:
+ * - `Countable` : to count the number of children.
+ * - `ArrayAccess` : to access children as an array.
+ * - `IteratorAggregate` : to iterate over children.
+ *
+ * Typical usage:
+ * ```php
+ * $node = new Node('auth');
+ * $node->setHandler(fn() => echo "Authentication");
+ * $child = new Node('login');
+ * $node->addChild($child);
+ * $node('param1'); // executes the handler
+ * ```
+ *
+ * This class is mainly used by `NodeTree` and `Router` to dynamically
+ * build and traverse a routing tree.
+ *
+ * @package SimpleRoute\Router
+ */
+
 class Node implements Countable, ArrayAccess, IteratorAggregate {
     /**
      * The key used to store this Node inside another Node (as its child).
