@@ -1,16 +1,15 @@
 <?php
 
+use SimpleRoute\Router\Node;
+use SimpleRoute\Router\NodeTree;
+use SimpleRoute\Router\Router;
+use SimpleRoute\Router\UriSlicer;
+
 require_once __DIR__."/../bootstrap.php";
-
-
-use Router\Node;
-use Router\NodeMap;
-use Router\Route;
-use Router\RouteMap;
 
 //Create a RouteMap
 $URI = "/login//";
-$routeMap = new RouteMap($URI);
+$uriSlicer = new UriSlicer($URI);
 
 //make fake nodeMap
 
@@ -48,9 +47,9 @@ $initNode->addChildren([$loginNode, $dashBoardNode]);
 $dashBoardNode->addChild($usersNode);
 
 //Creating a NodeMap
-$nodeMap = new NodeMap($initNode);
+$nodeTree = new NodeTree($initNode);
 
-$route = new Route($nodeMap);
+$router = new Router($nodeTree);
 
 //Make the route
-$route($routeMap);
+$router($uriSlicer);

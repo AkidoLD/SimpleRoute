@@ -1,6 +1,6 @@
 <?php
 
-namespace Router;
+namespace SimpleRoute\Router;
 
 use App\Exceptions\NodeException;
 use ArrayAccess;

@@ -1,8 +1,8 @@
 <?php
 
-namespace Router;
+namespace SimpleRoute\Router;
 
-class NodeMap {
+class NodeTree {
     private ?Node $activeNode;
     private Node $nodeTree;
 

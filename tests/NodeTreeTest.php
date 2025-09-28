@@ -1,7 +1,7 @@
 <?php
 
-use Router\Node;
-use Router\NodeMap;
+use SimpleRoute\Router\Node;
+use SimpleRoute\Router\NodeTree;
 
 require_once __DIR__."/../bootstrap.php";
 
@@ -20,20 +20,20 @@ $testNode1->addChild($testNode3);
 
 $testNode2->addChild($testNode4);
 
-$nodeMap = new NodeMap($initNode);
+$nodeTree = new NodeTree($initNode);
 
-echo $nodeMap->getActiveNode();
-
-echoBR();
-
-echo $nodeMap->nextNode('tnode1');
+echo $nodeTree->getActiveNode();
 
 echoBR();
 
-echo $nodeMap->getActiveNode();
+echo $nodeTree->nextNode('tnode1');
 
 echoBR();
 
-echo $nodeMap->nextNode('tnode3');
+echo $nodeTree->getActiveNode();
+
+echoBR();
+
+echo $nodeTree->nextNode('tnode3');
 
 

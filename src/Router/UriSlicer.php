@@ -1,6 +1,6 @@
 <?php
 
-namespace Router;
+namespace SimpleRoute\Router;
 /**
  * Represents an HTTP route as a list of URI segments.
  *
@@ -9,9 +9,9 @@ namespace Router;
  * Useful for custom routing systems.
  *
  * @author akido-ld
- * @version 1.0.0
+ * @version 1.0.1
  */
-class RouteMap {
+class UriSlicer{
     /**
      * @var array List of URI segments
      */
