@@ -8,11 +8,37 @@ use ArrayIterator;
 use Countable;
 use InvalidArgumentException;
 use IteratorAggregate;
+use Ramsey\Uuid\Uuid;
 
 class Node implements Countable, ArrayAccess, IteratorAggregate {
+    /**
+     * The key used to store this Node inside another Node (as its child).
+     * @var string
+     */
     private string $key;
-    private array $children = [];
+
+    /**
+     * The unique identifier of this Node.
+     * 
+     * Useful when you have multiple Nodes with the same key.
+     * 
+     * @var string (read-only)
+     */
+    private readonly string $uuid;
+
+    /**
+     * The children of this Node.
+     * 
+     * @var Node[]
+     */
+    private array $children;
+
     /** 
+     * The handler attached to this Node.
+     * 
+     * If a handler has been attached, you can execute it
+     * with the execute() method or the __invoke() implementation.
+     * 
      * @var callable|null 
      */
     private $handler = null;
@@ -20,16 +46,49 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
     public function __construct(string $key, ?callable $handler = null) {
         $this->key = $key;
         $this->handler = $handler;
+        $this->uuid = Uuid::uuid4()->toString();
+        $this->children = [];
     }
 
+    /**
+     * Get the key of this Node.
+     * 
+     * @return string The key of this Node.
+     */
     public function getKey(): string {
         return $this->key;
     }
+
+    /**
+     * Get the unique identifier (UUID) of this Node.
+     * 
+     * @return string The UUID of this Node.
+     */
+    public function getUuid(): string {
+        return $this->uuid;
+    }
     
+    /**
+     * Add a single child to this Node.
+     *
+     * The child is stored using its key.
+     *
+     * @param Node $child The Node instance to add as a child.
+     * @return void
+     */
     public function addChild(Node $child): void {
         $this->children[$child->getKey()] = $child;
     }
 
+    /**
+     * Add multiple children to this Node.
+     *
+     * Iterates over the given array and adds each element as a child.
+     *
+     * @param Node[] $children An array of Node instances.
+     * @throws \InvalidArgumentException If any element is not a Node instance.
+     * @return void
+     */ 
     public function addChildren(array $children): void {
         foreach ($children as $child) {
             if (!($child instanceof Node)) {
@@ -39,94 +98,94 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
         }
     }
     
+    /**
+     * Attach a handler to this Node.
+     *
+     * @param callable|null $handler The handler to attach, or null to remove it.
+     * @return void
+     */
     public function setHandler(?callable $handler): void {
         $this->handler = $handler;
     }
 
+    /**
+     * Get the handler attached to this Node.
+     *
+     * @return callable|null The handler if attached, or null otherwise.
+     */
     public function getHandler(): ?callable {
         return $this->handler;
     }
-
+    
     /**
-     * Get `Node` child
+     * Get a child Node by its key.
      * 
-     * If the Node don't have child, the method return null
-     * 
-     * @exception NodeException If the Node have childrens and the child key is not found
-     * 
-     * @param string $key
-     * 
-     * @return ?Node
+     * @param string $key The key of the child Node.
+     * @return ?Node The child Node if found, or null otherwise.
      */
     public function getChild(string $key): ?Node {
-        if(!$this->haveChildren()) {
-            return null;
-        }
-        if(!($child = $this->children[$key] ?? null)){
-            throw new NodeException("The child with the key : $key had not been found.");
-        }
-        return $child;
+        return $this->children[$key] ?? null;
     }
 
     /**
-     * Get all children of the Node
+     * Get all children of this Node.
      * 
-     * @return array
+     * @return Node[] Array of child Nodes.
      */
-    public function getChildren(): array{
+    public function getChildren(): array {
         return $this->children;
     }
 
     /**
-     * Summary of isLeaf
-     * @return bool
+     * Check if this Node is a leaf (has no children).
+     * 
+     * @return bool True if the Node has no children, false otherwise.
      */
-    public function haveChildren(): bool{
-        return !empty($this->children);
+    public function isLeaf(): bool {
+        return empty($this->children);
     }
 
-    public function childrenCount(): int{
+    /**
+     * Count the number of children of this Node.
+     * 
+     * @return int The number of children.
+     */
+    public function childrenCount(): int {
         return count($this->children);
     }
 
     /**
-     * Execute the callaback function
+     * Execute the callback handler of this Node.
      * 
-     * This method allow to execute the callback function handler
-     * to the `Node`
-     * 
-     * @param mixed $args A list of arguments to put in the callback like is parameters 
-     * 
-     * @throws NodeException If not callback handler on the `Node`
-     * 
-     * @return mixed the return of the callback
+     * @param mixed ...$args Arguments to pass to the callback.
+     * @throws NodeException If no handler is attached to the Node.
+     * @return mixed The return value of the callback.
      */
-    public function execute(...$args){
+    public function execute(...$args) {
         if (!$this->handler) {
-            throw new NodeException("This Node don't have callback handler");
+            throw new NodeException("This Node has no callback handler");
         }
-        //
         return ($this->handler)(...$args);
     }
 
     /**
-     * An alias of execute method
+     * An alias of the execute() method.
      * 
-     * @param array $args
-     * @return mixed
+     * @param mixed ...$args Arguments to pass to the handler.
+     * @return mixed The return value of the handler.
      */
     public function __invoke(...$args) {
-        $this->execute(...$args);
+        return $this->execute(...$args);
     }
 
-    //Implementation of Stringable
+    // Implementation of Stringable
     public function __toString(): string {
-        return " Node key : $this->key ";
+        return "Node(key: {$this->key}, uuid: {$this->uuid})";
     }
 
     // Implementation of Countable
     public function count(): int {
-        return count($this->children);
+        return $this->childrenCount();
     }
 
     // Implementation of ArrayAccess
@@ -144,9 +203,7 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
                 'Error: Only instances of Node can be added as children.'
             );
         }
-        //Check if the offset it is not set
         if ($offset === null) {
-            //If the offset it is not set, use the Node key like the offset
             $this->addChild($value);
         } else {
             $this->children[$offset] = $value;
@@ -157,7 +214,7 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
         unset($this->children[$offset]);
     }
 
-    //Implementation of IteratorAggregate
+    // Implementation of IteratorAggregate
     public function getIterator(): ArrayIterator {
         return new ArrayIterator($this->children);
     }
