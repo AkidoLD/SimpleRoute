@@ -4,4 +4,4 @@ namespace SimpleRoute\Exceptions;
 
 use Exception;
 
-class RouteException extends Exception {}
+class UriSlicerException extends Exception{}
