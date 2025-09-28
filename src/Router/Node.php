@@ -2,13 +2,15 @@
 
 namespace SimpleRoute\Router;
 
-use App\Exceptions\NodeException;
 use ArrayAccess;
 use ArrayIterator;
 use Countable;
 use InvalidArgumentException;
 use IteratorAggregate;
 use Ramsey\Uuid\Uuid;
+use SimpleRoute\Exceptions\NodeChildIsNotANode;
+use SimpleRoute\Exceptions\NodeChildKeyMismatchException;
+use SimpleRoute\Exceptions\NodeHandlerNotSet;
 
 class Node implements Countable, ArrayAccess, IteratorAggregate {
     /**
@@ -86,13 +88,13 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
      * Iterates over the given array and adds each element as a child.
      *
      * @param Node[] $children An array of Node instances.
-     * @throws \InvalidArgumentException If any element is not a Node instance.
+     * @throws NodeChildIsNotANode If any element is not a Node instance.
      * @return void
      */ 
     public function addChildren(array $children): void {
         foreach ($children as $child) {
             if (!($child instanceof Node)) {
-                throw new InvalidArgumentException("All children must be instances of Node");
+                throw new NodeChildIsNotANode("All children must be instances of Node");
             }
             $this->addChild($child);
         }
@@ -158,12 +160,12 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
      * Execute the callback handler of this Node.
      * 
      * @param mixed ...$args Arguments to pass to the callback.
-     * @throws NodeException If no handler is attached to the Node.
+     * @throws NodeHandlerNotSet If no handler is attached to the Node.
      * @return mixed The return value of the callback.
      */
     public function execute(...$args) {
         if (!$this->handler) {
-            throw new NodeException("This Node has no callback handler");
+            throw new NodeHandlerNotSet("This Node has no callback handler");
         }
         return ($this->handler)(...$args);
     }
@@ -196,19 +198,22 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
     public function offsetExists(mixed $offset): bool {
         return isset($this->children[$offset]);
     }
-
     public function offsetSet(mixed $offset, mixed $value): void {
         if (!($value instanceof Node)) {
-            throw new InvalidArgumentException(
+            throw new NodeChildIsNotANode(
                 'Error: Only instances of Node can be added as children.'
             );
         }
-        if ($offset === null) {
-            $this->addChild($value);
-        } else {
-            $this->children[$offset] = $value;
+        
+        if ($offset !== null && $offset !== $value->getKey()) {
+            throw new NodeChildKeyMismatchException(
+                'Error: The offset must match the key of the Node.'
+            );
         }
+    
+        $this->children[$value->getKey()] = $value;
     }
+    
 
     public function offsetUnset(mixed $offset): void {
         unset($this->children[$offset]);
