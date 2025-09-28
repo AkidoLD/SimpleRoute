@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Exceptions;
+namespace SimpleRoute\Exceptions;
 
-use Exception;
+class NodeException extends \Exception {}
 
-class NodeException extends Exception {
+class NodeChildIsNotANode extends NodeException {}
 
-}
+class NodeHandlerNotSet extends NodeException {}
 
+class NodeChildKeyMismatchException extends NodeException {}
