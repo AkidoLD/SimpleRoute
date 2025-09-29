@@ -148,6 +148,15 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
     public function getHandler(): ?callable {
         return $this->handler;
     }
+
+    /**
+     * Check if a handler had been attache to the Node
+     * 
+     * @return bool
+     */
+    public function hadHandler(): bool{
+        return $this->handler !== null;
+    }
     
     /**
      * Get a child Node by its key.
