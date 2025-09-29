@@ -160,4 +160,15 @@ class UriSlicer {
     public function __invoke(): ?string {
         return $this->next();
     }
+
+    /**
+     * Allow to easly get the URI string use in the UriSlicer
+     * 
+     * This is an alias of {@see UriSlicer::getUri()}
+     * 
+     * @return string
+     */
+    public function __toString(): string{
+        return $this->getURI();
+    }
 }
