@@ -5,7 +5,7 @@ use SimpleRoute\Router\NodeTree;
 use SimpleRoute\Router\Router;
 use SimpleRoute\Router\UriSlicer;
 use SimpleRoute\Exceptions\RouteNotFoundException;
-use SimpleRoute\Exceptions\InvalidRouterUri;
+use SimpleRoute\Exceptions\InvalidUriException;
 
 require_once __DIR__."/../bootstrap.php";
 
@@ -79,7 +79,7 @@ $router(new UriSlicer("/dashboard/articles/99/php-routing/"));
 separator("Test 6 : URI invalide (vide)");
 try {
     $router(new UriSlicer("/"));
-} catch (InvalidRouterUri $e) {
+} catch (InvalidUriException $e) {
     prettyPrint("Exception capturée : " . $e->getMessage(), "h3");
 }
 

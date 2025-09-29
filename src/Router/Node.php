@@ -5,8 +5,9 @@ namespace SimpleRoute\Router;
 use ArrayAccess;
 use ArrayIterator;
 use Countable;
-use InvalidArgumentException;
 use IteratorAggregate;
+
+//External lib
 use Ramsey\Uuid\Uuid;
 use SimpleRoute\Exceptions\NodeChildIsNotANode;
 use SimpleRoute\Exceptions\NodeChildKeyMismatchException;
@@ -77,7 +78,7 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
 
     public function __construct(string $key, ?callable $handler = null) {
         $this->key = $key;
-        $this->handler = $handler;
+        $this->setHandler($handler);
         $this->uuid = Uuid::uuid4()->toString();
         $this->children = [];
     }
@@ -203,7 +204,7 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
      * @return mixed The return value of the callback.
      */
     public function execute(...$args) {
-        if (!$this->handler) {
+        if ($this->handler === null) {
             throw new NodeHandlerNotSet("This Node has no callback handler");
         }
         return ($this->handler)(...$args);

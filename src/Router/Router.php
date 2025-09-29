@@ -2,7 +2,7 @@
 
 namespace SimpleRoute\Router;
 
-use SimpleRoute\Exceptions\InvalidRouterUri;
+use SimpleRoute\Exceptions\InvalidUriException;
 use SimpleRoute\Exceptions\RouteNotFoundException;
 
 /**
@@ -32,7 +32,7 @@ use SimpleRoute\Exceptions\RouteNotFoundException;
  * ```
  *
  * Exceptions:
- * - {@see InvalidRouterUri} if the URI is incomplete.
+ * - {@see InvalidUriException} if the URI is incomplete.
  * - {@see RouteNotFoundException} if no matching child node exists.
  *
  * @package SimpleRoute\Router
@@ -83,24 +83,38 @@ class Router {
      * - When a leaf is reached, invoke its handler with any unused segments as parameters.
      *
      * @param UriSlicer $uriSlicer The URI to match and slice into segments.
-     * @throws InvalidRouterUri If the URI ends before reaching a leaf.
+     * @throws InvalidUriException If the URI ends before reaching a leaf.
      * @throws RouteNotFoundException If a segment does not match any child node.
      * @return void
      */
+    //Parcourir l'arbre jusqu'a arrive a une feuille ou bien
+    //si l'URI s'arrete en cours, verifier si la Node actuel
+    //a un handler et si oui, la designer comme Node
+    //Je pense ici on va devoir imposer une certaines norme
+    //au niveau des URL parceque la methode avec les parametres
+    //en plein milieu des URL n'est pas trop possible ici. Ici
+    //Il faudrat passe explicitement les parametre par la methodes GET
+    //ou POST
     public function makeRoute(UriSlicer $uriSlicer){
         // Traverse until a leaf is reached
-        while(!($this->nodeTree->getActiveNode())->isLeaf()){
-            if(!$route = $uriSlicer()){
-                throw new InvalidRouterUri('This URI is Invalid');
+        while(!($node = $this->nodeTree->getActiveNode())){
+            $slice = $uriSlicer();
+            if(!$slice){
+                if($node->hadHandler()){
+                    break;
+                }
+                throw new InvalidUriException("The URI $uriSlicer is invalid");
             }
-            // Ensure the segment matches an existing child node
-            if(!$node = ($this->nodeTree)($route)){
-                throw new RouteNotFoundException("No route matches segment '$route'");
+            //Try to get the next node in the tree
+            $nextNode = $this->nodeTree->nextNode($slice);
+            
+            //If no Node found, throw a RouteNotFoundException
+            if(!$nextNode){
+                throw new RouteNotFoundException("The URI segment $slice had been not found");
             }
         }
-        // Pass any remaining segments as arguments to the leaf handler
-        $args = $uriSlicer->getUnusedSegments();
-        $node(...$args);
+        //Execute the Node Handler
+        $node->execute();
     }
 
     /**
