@@ -2,7 +2,7 @@
 
 use SimpleRoute\Router\Node;
 
-require_once __DIR__."/../vendor/autoload.php";
+require_once __DIR__."/../bootstrap.php";
 
 $handle2 = fn()=> "Je suis la node 2";
 $handle3 = fn()=> "Je suis la node 3";
