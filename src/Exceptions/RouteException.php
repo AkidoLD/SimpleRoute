@@ -6,6 +6,6 @@ use Exception;
 
 class RouteException extends Exception {}
 
-class InvalidRouterUri extends RouteException{}
+class InvalidUriException extends RouteException{}
 
 class RouteNotFoundException extends RouteException{}
