@@ -1,6 +1,6 @@
 <?php
 
-namespace SimpleRoute\Exceptions;
+namespace SimpleRoute\Exceptions\Router;
 
 use Exception;
 
