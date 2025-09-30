@@ -277,7 +277,7 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
     }
     
     public function offsetUnset(mixed $offset): void {
-        unset($this->children[$offset]);
+        $this->removeChild($offset);
     }
 
     // Implementation of IteratorAggregate
