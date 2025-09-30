@@ -7,28 +7,29 @@ use ArrayIterator;
 use Countable;
 use IteratorAggregate;
 
-//External lib
+// External libs
 use Ramsey\Uuid\Uuid;
-use SimpleRoute\Exceptions\NodeChildIsNotANode;
-use SimpleRoute\Exceptions\NodeChildKeyMismatchException;
-use SimpleRoute\Exceptions\NodeHandlerNotSet;
+use SimpleRoute\Exceptions\Node\NodeChildIsNotANodeException;
+use SimpleRoute\Exceptions\Node\NodeChildKeyMismatchException;
+use SimpleRoute\Exceptions\Node\NodeHandlerNotSetException;
+use SimpleRoute\Exceptions\Node\NodeSelfReferenceException;
 
 /**
  * Represents a node in a routing tree.
  *
- * A `Node` acts as a junction point in the route structure. 
+ * A `Node` acts as a junction point in the route structure.  
  * It can hold multiple children (other `Node` instances) and an optional handler
  * that will be executed when the corresponding route is reached.
  *
- * Each `Node` has a key unique within its parent and a globally unique UUID
+ * Each `Node` has a key unique within its parent, and a globally unique UUID
  * to distinguish it from other nodes that may share the same key.
  *
  * Implements:
- * - `Countable` : to count the number of children.
- * - `ArrayAccess` : to access children as an array.
- * - `IteratorAggregate` : to iterate over children.
+ * - `Countable`: allows counting the number of children.
+ * - `ArrayAccess`: allows accessing children as an array.
+ * - `IteratorAggregate`: allows iterating over children.
  *
- * Typical usage:
+ * Example usage:
  * ```php
  * $node = new Node('auth');
  * $node->setHandler(fn() => echo "Authentication");
@@ -42,36 +43,44 @@ use SimpleRoute\Exceptions\NodeHandlerNotSet;
  *
  * @package SimpleRoute\Router
  */
-
 class Node implements Countable, ArrayAccess, IteratorAggregate {
     /**
-     * The key used to store this Node inside another Node (as its child).
+     * The key used to identify this Node within its parent.
      * @var string
      */
     private string $key;
 
     /**
-     * The unique identifier of this Node.
-     * 
-     * Useful when you have multiple Nodes with the same key.
-     * 
+     * The unique identifier (UUID) of this Node.
+     *
+     * Useful when multiple nodes share the same key.
+     *
      * @var string (read-only)
      */
     private readonly string $uuid;
 
     /**
+     * The parent of this Node.
+     *
+     * Automatically set when this Node is added as a child of another Node.
+     *
+     * @var Node|null
+     */
+    private ?Node $parent;
+
+    /**
      * The children of this Node.
-     * 
+     *
      * @var Node[]
      */
     private array $children;
 
     /** 
-     * The handler attached to this Node.
-     * 
-     * If a handler has been attached, you can execute it
-     * with the execute() method or the __invoke() implementation.
-     * 
+     * The handler (callback) attached to this Node.
+     *
+     * If defined, the handler can be executed with `execute()`  
+     * or by invoking the Node directly (`__invoke()`).
+     *
      * @var callable|null 
      */
     private $handler = null;
@@ -81,61 +90,63 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
         $this->setHandler($handler);
         $this->uuid = Uuid::uuid4()->toString();
         $this->children = [];
+        $this->parent = null;
     }
 
     /**
      * Get the key of this Node.
-     * 
-     * @return string The key of this Node.
      */
     public function getKey(): string {
         return $this->key;
     }
 
     /**
-     * Get the unique identifier (UUID) of this Node.
-     * 
-     * @return string The UUID of this Node.
+     * Get the UUID of this Node.
      */
     public function getUuid(): string {
         return $this->uuid;
     }
     
     /**
-     * Add a single child to this Node.
+     * Get the parent of this Node.
      *
-     * The child is stored using its key.
+     * @return Node|null The parent Node if set, otherwise null.
+     */
+    public function getParent(): ?Node {
+        return $this->parent;
+    }
+
+    /**
+     * Add a child Node.
      *
-     * @param Node $child The Node instance to add as a child.
-     * @return void
+     * @param Node $child The Node to add.
+     * @throws NodeSelfReferenceException If attempting to add the Node to itself.
      */
     public function addChild(Node $child): void {
+        if ($child->getUuid() === $this->uuid) {
+            throw new NodeSelfReferenceException('A Node cannot be its own child.');
+        }
+        $child->parent = $this;
         $this->children[$child->getKey()] = $child;
     }
 
     /**
-     * Add multiple children to this Node.
+     * Add multiple children Nodes.
      *
-     * Iterates over the given array and adds each element as a child.
-     *
-     * @param Node[] $children An array of Node instances.
-     * @throws NodeChildIsNotANode If any element is not a Node instance.
-     * @return void
-     */ 
+     * @param Node[] $children Array of Node instances.
+     * @throws NodeChildIsNotANodeException If any element is not a Node instance.
+     */
     public function addChildren(array $children): void {
         foreach ($children as $child) {
             if (!($child instanceof Node)) {
-                throw new NodeChildIsNotANode("All children must be instances of Node");
+                throw new NodeChildIsNotANodeException("All children must be instances of Node.");
             }
             $this->addChild($child);
         }
     }
     
     /**
-     * Attach a handler to this Node.
-     *
-     * @param callable|null $handler The handler to attach, or null to remove it.
-     * @return void
+     * Attach a handler (callback) to this Node.
      */
     public function setHandler(?callable $handler): void {
         $this->handler = $handler;
@@ -144,26 +155,24 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
     /**
      * Get the handler attached to this Node.
      *
-     * @return callable|null The handler if attached, or null otherwise.
+     * @return callable|null The handler if set, otherwise null.
      */
     public function getHandler(): ?callable {
         return $this->handler;
     }
 
     /**
-     * Check if a handler had been attache to the Node
-     * 
-     * @return bool
+     * Check if this Node has a handler.
      */
-    public function hadHandler(): bool{
+    public function hadHandler(): bool {
         return $this->handler !== null;
     }
     
     /**
      * Get a child Node by its key.
-     * 
-     * @param string $key The key of the child Node.
-     * @return ?Node The child Node if found, or null otherwise.
+     *
+     * @param string $key The child Node key.
+     * @return Node|null The child Node if found, otherwise null.
      */
     public function getChild(string $key): ?Node {
         return $this->children[$key] ?? null;
@@ -171,56 +180,55 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
 
     /**
      * Get all children of this Node.
-     * 
-     * @return Node[] Array of child Nodes.
+     *
+     * @return Node[]
      */
     public function getChildren(): array {
         return $this->children;
     }
 
+    public function removeChild(string $key){
+        if(!isset($this->children[$key])){
+            throw new NodeChildKeyMismatchException("The Node with the key : $key is not found");
+        }
+        unset($this->children[$key]);
+    }
     /**
      * Check if this Node is a leaf (has no children).
-     * 
-     * @return bool True if the Node has no children, false otherwise.
      */
     public function isLeaf(): bool {
         return empty($this->children);
     }
 
     /**
-     * Count the number of children of this Node.
-     * 
-     * @return int The number of children.
+     * Count the number of children.
      */
     public function childrenCount(): int {
         return count($this->children);
     }
 
     /**
-     * Execute the callback handler of this Node.
-     * 
-     * @param mixed ...$args Arguments to pass to the callback.
-     * @throws NodeHandlerNotSet If no handler is attached to the Node.
-     * @return mixed The return value of the callback.
+     * Execute the handler attached to this Node.
+     *
+     * @param mixed ...$args Arguments passed to the handler.
+     * @throws NodeHandlerNotSetException If no handler is defined.
+     * @return mixed The result of the handler.
      */
     public function execute(...$args) {
         if ($this->handler === null) {
-            throw new NodeHandlerNotSet("This Node has no callback handler");
+            throw new NodeHandlerNotSetException("The node with key '{$this->key}' has no handler defined.");
         }
         return ($this->handler)(...$args);
     }
 
     /**
-     * An alias of the execute() method.
-     * 
-     * @param mixed ...$args Arguments to pass to the handler.
-     * @return mixed The return value of the handler.
+     * Alias of `execute()`.  
+     * Allows invoking the Node like a function.
      */
     public function __invoke(...$args) {
         return $this->execute(...$args);
     }
 
-    // Implementation of Stringable
     public function __toString(): string {
         return "Node(key: {$this->key}, uuid: {$this->uuid})";
     }
@@ -240,45 +248,34 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
     }
 
     /**
-     * Sets a child Node at the given offset.
+     * Set a child Node using array syntax.
      *
-     * This method implements ArrayAccess::offsetSet, allowing you to add a child
-     * Node to this Node using array syntax.
-     * 
      * Behavior:
-     * - The `$value` must always be an instance of `Node`.
-     * - The `$offset` is optional. If provided, it **must** match the key of the Node.
-     *   Otherwise, a `NodeChildKeyMismatchException` will be thrown.
-     * - If `$offset` is null, the child Node will be stored using its key automatically.
+     * - `$value` must be a `Node`.
+     * - If `$offset` is provided, it must match the Node’s key.
+     * - If `$offset` is null, the Node’s key will be used automatically.
      *
-     * Example usage:
-     *   $node[$child->getKey()] = $child; // recommended
-     *   $node[] = $child;                 // works, key is taken from child
-     *
-     * @param mixed $offset The key to store the child at (must match the child's key if provided).
-     * @param mixed $value The Node instance to add as a child.
-     * 
-     * @throws NodeChildIsNotANode If $value is not a Node instance.
-     * @throws NodeChildKeyMismatchException If the $offset does not match the Node's key.
-     * @return void
+     * @param mixed $offset The child key (optional).
+     * @param mixed $value The Node to add.
+     * @throws NodeChildIsNotANodeException If $value is not a Node.
+     * @throws NodeChildKeyMismatchException If $offset does not match the Node’s key.
      */
     public function offsetSet(mixed $offset, mixed $value): void {
         if (!($value instanceof Node)) {
-            throw new NodeChildIsNotANode(
-                'Error: Only instances of Node can be added as children.'
+            throw new NodeChildIsNotANodeException(
+                'Error: Only Node instances can be added as children.'
             );
         }
         
         if ($offset !== null && $offset !== $value->getKey()) {
             throw new NodeChildKeyMismatchException(
-                'Error: The offset must match the key of the Node.'
+                'Error: The offset must match the Node’s key.'
             );
         }
     
         $this->children[$value->getKey()] = $value;
     }
     
-
     public function offsetUnset(mixed $offset): void {
         unset($this->children[$offset]);
     }
