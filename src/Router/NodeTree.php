@@ -2,86 +2,56 @@
 
 namespace SimpleRoute\Router;
 
-/**
- * Provides a simple way to traverse a tree of `Node` objects.
- *
- * A `NodeTree` is a helper structure that keeps track of an active node 
- * and allows you to move through the tree step by step. 
- * It is initialized with a root `Node` and always maintains 
- * a reference to the currently active `Node`.
- *
- * Features:
- * - Start traversal from a root node.
- * - Move to child nodes by key using `nextNode()` or the `__invoke()` syntax.
- * - Retrieve the active node at any time.
- *
- * Typical usage:
- * ```php
- * $root = new Node('root');
- * $child = new Node('child');
- * $root->addChild($child);
- *
- * $tree = new NodeTree($root);
- * $tree->nextNode('child'); // moves active node to $child
- * echo $tree->getActiveNode()->getKey(); // "child"
- * ```
- *
- * This class is mainly used internally by the `Router` 
- * to traverse routes when matching requests.
- *
- * @package SimpleRoute\Router
- */
+use SimpleRoute\Exceptions\NodeTree\NodeIsRootNodeException;
+use SimpleRoute\Exceptions\NodeTree\NodeNotInTreeException;
+use SimpleRoute\Exceptions\NodeTree\NodeOutOfTreeException;
+
 class NodeTree {
+
     /**
-     * The current active `Node` in the traversal.
+     * Currently active node in the tree traversal.
      *
-     * This represents the current position while moving 
-     * through the `Node` tree. Starts at the root node 
-     * and changes when calling {@see NodeTree::nextNode()}.
+     * Represents the current position in the tree. Can be null if tree is empty or reset.
      *
      * @var Node|null
      */
     private ?Node $activeNode;
 
     /**
-     * The root `Node` of the tree.
+     * Root node of the tree.
      *
-     * This is the entry point of the traversal.
+     * The entry point for the traversal.
      *
      * @var Node
      */
-    private Node $nodeTree;
+    private Node $rootNode;
 
     /**
-     * Create a new `NodeTree` with a given root node.
+     * Create a new NodeTree starting from a given root node.
      *
-     * @param Node $nodeTree The root node of the tree
+     * @param Node $rootNode
      */
-    public function __construct(Node $nodeTree){
-        $this->nodeTree = $nodeTree;
-        $this->activeNode = $nodeTree;
+    public function __construct(Node $rootNode){
+        $this->rootNode = $rootNode;
+        $this->activeNode = $rootNode;
     }
 
     /**
      * Get the currently active node.
      *
-     * The active node represents the current position 
-     * in the traversal of the tree.
-     *
-     * @return Node The current active node
+     * @return Node|null Returns the active node or null if tree has no active node
      */
-    public function getActiveNode(): Node{
+    public function getActiveNode(): ?Node{
         return $this->activeNode;
     }
 
     /**
-     * Move to the child node with the given key.
+     * Move the active node to its child with the given key.
      *
      * Updates the active node to the child matching the provided key.
-     * Returns the new active node, or `null` if no child with the key exists.
      *
      * @param string $key The key of the child node to move to
-     * @return Node|null The new active node, or null if not found
+     * @return Node|null The new active node, or null if no child with the key exists
      */
     public function nextNode(string $key): ?Node{
         return $this->activeNode = $this->activeNode[$key];
@@ -92,28 +62,96 @@ class NodeTree {
      *
      * @return Node The root node
      */
-    public function getNodeTree(): Node{
-        return $this->nodeTree;
+    public function getRootNode(): Node{
+        return $this->rootNode;
     }
 
     /**
-     * Replace the root node and reset the active node of the tree.
+     * Replace the root node and reset the active node.
      *
-     * @param Node $nodeTree The new root node
+     * @param Node $rootNode The new root node
      * @return void
      */
-    public function setNodeTree(Node $nodeTree): void{
-        $this->nodeTree = $nodeTree;
-        $this->activeNode = $nodeTree;
+    public function setRootNode(Node $rootNode): void{
+        $this->rootNode = $rootNode;
+        $this->activeNode = $rootNode;
     }
+
+    /**
+     * Trace all parents of a node up to (but not including) the stop node.
+     *
+     * @param Node $node   The node whose parents are traced
+     * @param Node|null $stopAt Optional node to stop at (usually the root)
+     * @return array Keys of parent nodes, ordered from top → bottom
+     * @throws NodeIsRootNodeException If the node itself is the stop node
+     * @throws NodeNotInTreeException  If stopAt is specified but not found
+     */
+    public static function traceNodeParent(Node $node, ?Node $stopAt = null): array {
+        if ($stopAt !== null && $node === $stopAt) {
+            throw new NodeIsRootNodeException(
+                "Node '{$node->getKey()}' is the root node and has no parents"
+            );
+        }
+    
+        $keys = [];
+        $current = $node->getParent();
+    
+        while ($current !== null) {
+            if ($current === $stopAt) {
+                break;
+            }
+            $keys[] = $current->getKey();
+            $current = $current->getParent();
+        }
+    
+        if ($stopAt !== null && $current !== $stopAt) {
+            throw new NodeNotInTreeException(
+                "Node '{$node->getKey()}' is not under the specified stop node '{$stopAt->getKey()}'"
+            );
+        }
+    
+        return array_reverse($keys);
+    }
+    
+    /**
+     * Get the full path (keys) from root to the node (excluding root).
+     *
+     * @param Node $node Node to get the path for
+     * @return array Path from root → node, excluding root key
+     * @throws NodeNotInTreeException If node is not in this tree
+     */
+    public function getPath(Node $node): array {
+        return self::traceNodeParent($node, $this->rootNode);
+    }
+    
+    /**
+     * Check if a node belongs to this tree.
+     *
+     * @param Node $node Node to check
+     * @return bool True if node belongs to this tree, false otherwise
+     */
+    public function contains(Node $node): bool {
+        if ($this->rootNode === $node) {
+            return true;
+        }
+    
+        try {
+            $this->getPath($node);
+            return true;
+        } catch (NodeNotInTreeException) {
+            return false;
+        }
+    }
+    
+    
 
     /**
      * Shortcut to move to the next node by key.
      *
-     * Equivalent to calling {@see NodeTree::nextNode()}.
+     * Equivalent to calling nextNode().
      *
-     * @param string $key The key of the child node to move to
-     * @return Node|null The new active node, or null if not found
+     * @param string $key
+     * @return Node|null
      */
     public function __invoke(string $key): ?Node{
         return $this->nextNode($key);
