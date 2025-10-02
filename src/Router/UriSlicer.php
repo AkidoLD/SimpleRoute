@@ -67,18 +67,6 @@ class UriSlicer {
     }
 
     /**
-     * Sets a new URI and resets the slicer state.
-     * 
-     * @param string $URI The new URI string.
-     * @return void
-     */
-    public function setURI(string $URI): void {
-        $this->segments = $this->parsePath($URI);
-        $this->URI = $URI;
-        $this->reset();
-    }
-
-    /**
      * Returns the full URI string.
      * 
      * @return string The original URI.
@@ -170,5 +158,21 @@ class UriSlicer {
      */
     public function __toString(): string{
         return $this->getURI();
+    }
+
+    // ... ton code existant ...
+
+    /**
+     * Factory to create a UriSlicer from an array of segments.
+     *
+     * @param string[] $segments Array of URI segments.
+     * @return self A new UriSlicer instance.
+     */
+    public static function fromSegments(array $segments): self {
+        $slicer = new self();
+        $slicer->segments = $segments;
+        $slicer->URI = '/' . implode('/', array: $segments);
+        $slicer->reset();
+        return $slicer;
     }
 }
