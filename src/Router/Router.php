@@ -2,128 +2,131 @@
 
 namespace SimpleRoute\Router;
 
-use SimpleRoute\Exceptions\InvalidUriException;
-use SimpleRoute\Exceptions\RouteNotFoundException;
+use Exception;
+use SimpleRoute\Exceptions\Router\RouteNotFoundException;
 
 /**
- * Core routing engine for matching URIs against a tree of `Node` objects.
+ * Router engine for matching URIs against a NodeTree.
  *
- * The `Router` consumes a `UriSlicer` (which breaks down a URI into segments)
- * and traverses the `NodeTree` step by step until a leaf node is reached.
- * 
- * Responsibilities:
- * - Start traversal from a root `NodeTree`.
- * - Consume URI segments and descend into matching child nodes.
- * - Throw explicit exceptions when the URI does not match the route tree.
- * - Once a leaf node is reached, invoke its handler with any unused URI segments as arguments.
+ * The Router traverses a NodeTree using segments from a UriSlicer. 
+ * When a node with a handler is reached, it executes it. If the route
+ * is not found or an exception occurs, an optional failure handler
+ * can be executed.
  *
- * Typical usage:
+ * Example usage:
  * ```php
- * $root = new Node('root', function($id) {
- *     echo "User ID: $id";
- * });
+ * $root = new Node('root', fn($id) => echo "User $id");
  * $root->addChild(new Node('user'));
- *
  * $tree = new NodeTree($root);
- * $router = new Router($tree);
  *
+ * $router = new Router($tree, fn($e) => echo "Error: {$e->getMessage()}");
  * $uri = new UriSlicer('/user/42');
- * $router($uri); // Calls handler with "42"
+ * $router($uri); // Calls handler or failureHandler on error
  * ```
- *
- * Exceptions:
- * - {@see InvalidUriException} if the URI is incomplete.
- * - {@see RouteNotFoundException} if no matching child node exists.
- *
- * @package SimpleRoute\Router
  */
 class Router {
     /**
-     * The tree of routes to be traversed.
+     * The NodeTree representing all routes.
      *
      * @var NodeTree
      */
     private NodeTree $nodeTree;
 
     /**
-     * Initialize the router with a `NodeTree`.
+     * Optional handler to call when routing fails.
+     * Receives the exception as parameter.
      *
-     * @param NodeTree $nodeTree The tree of nodes representing routes.
+     * @var callable|null
      */
-    public function __construct(NodeTree $nodeTree){
+    private $failureHandler;
+
+    /**
+     * Constructor.
+     *
+     * @param NodeTree $nodeTree The tree of routes.
+     * @param callable|null $failureHandler Optional handler for errors.
+     */
+    public function __construct(NodeTree $nodeTree, ?callable $failureHandler = null) {
         $this->nodeTree = $nodeTree;
+        $this->failureHandler = $failureHandler;
     }
 
     /**
-     * Replace the current `NodeTree`.
+     * Replace the current NodeTree.
      *
      * @param NodeTree $nodeTree
-     * @return void
      */
-    public function setnodeTree(NodeTree $nodeTree){
+    public function setNodeTree(NodeTree $nodeTree): void {
         $this->nodeTree = $nodeTree;
     }
 
     /**
-     * Get the current `NodeTree`.
+     * Get the current NodeTree.
      *
      * @return NodeTree
      */
-    public function getnodeTree(): NodeTree{
+    public function getNodeTree(): NodeTree {
         return $this->nodeTree;
     }
 
     /**
-     * Match the given URI against the route tree.
+     * Set a new failure handler.
      *
-     * Traverses the `NodeTree` using the segments from the `UriSlicer`.
-     * - While the active node is not a leaf, consume a segment.
-     * - If the segment is missing → throws {@see InvalidRouterUri}.
-     * - If the segment does not match any child node → throws {@see RouteNotFoundException}.
-     * - When a leaf is reached, invoke its handler with any unused segments as parameters.
-     *
-     * @param UriSlicer $uriSlicer The URI to match and slice into segments.
-     * @throws InvalidUriException If the URI ends before reaching a leaf.
-     * @throws RouteNotFoundException If a segment does not match any child node.
-     * @return void
+     * @param callable|null $failureHandler
      */
-    //Parcourir l'arbre jusqu'a arrive a une feuille ou bien
-    //si l'URI s'arrete en cours, verifier si la Node actuel
-    //a un handler et si oui, la designer comme Node
-    //Je pense ici on va devoir imposer une certaines norme
-    //au niveau des URL parceque la methode avec les parametres
-    //en plein milieu des URL n'est pas trop possible ici. Ici
-    //Il faudrat passe explicitement les parametre par la methodes GET
-    //ou POST
-    public function makeRoute(UriSlicer $uriSlicer){
-        // Traverse until a leaf is reached
-        while(!($node = $this->nodeTree->getActiveNode())){
-            $slice = $uriSlicer();
-            if(!$slice){
-                if($node->hadHandler()){
-                    break;
-                }
-                throw new InvalidUriException("The URI $uriSlicer is invalid");
-            }
-            //Try to get the next node in the tree
-            $nextNode = $this->nodeTree->nextNode($slice);
-            
-            //If no Node found, throw a RouteNotFoundException
-            if(!$nextNode){
-                throw new RouteNotFoundException("The URI segment $slice had been not found");
-            }
-        }
-        //Execute the Node Handler
-        $node->execute();
+    public function setFailureHandler(?callable $failureHandler): void {
+        $this->failureHandler = $failureHandler;
     }
 
     /**
-     * Shortcut to call {@see makeRoute()} directly with `()` syntax.
+     * Get the current failure handler.
+     *
+     * @return callable|null
+     */
+    public function getFailureHandler(): ?callable {
+        return $this->failureHandler;
+    }
+
+    /**
+     * Traverse the NodeTree using a UriSlicer.
+     * 
+     * Throws RouteNotFoundException if a segment does not match.
+     * Executes the node handler when traversal completes.
+     * Calls the failure handler if defined when any exception occurs.
      *
      * @param UriSlicer $uriSlicer
-     * @return void
      */
-    public function __invoke(UriSlicer $uriSlicer){
+    public function makeRoute(UriSlicer $uriSlicer){
+        $node = null;
+        try{
+            while($uriSlicer->hasNext()){
+                $node = $this->nodeTree->nextNode($uriSlicer->next());
+                if($node === null){
+                    throw new RouteNotFoundException('');
+                }
+            }
+    
+            if($node === null){
+                throw new RouteNotFoundException('');
+            }
+    
+            $node->execute();
+    
+        }catch(Exception $e){
+            if($this->failureHandler){
+                ($this->failureHandler)($e);
+            }else{
+                throw $e;
+            }
+        }
+    }
+    
+    /**
+     * Shortcut to call makeRoute() directly using parentheses.
+     *
+     * @param UriSlicer $uriSlicer
+     */
+    public function __invoke(UriSlicer $uriSlicer): void {
         $this->makeRoute($uriSlicer);
     }
 }

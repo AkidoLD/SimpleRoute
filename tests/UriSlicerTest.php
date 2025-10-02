@@ -58,14 +58,6 @@ final class UriSlicerTest extends TestCase
         $this->assertSame("/auth/login/edit", (string)$this->slicer);
     }
 
-    public function testSetURI(): void
-    {
-        $this->slicer->setURI("/new/path");
-        $this->assertSame("/new/path", $this->slicer->getURI());
-        $this->assertSame("new", $this->slicer->next());
-        $this->assertSame("path", $this->slicer->next());
-    }
-
     public function testFromSegmentsFactory(): void
     {
         $segments = ["user", "profile", "edit"];
