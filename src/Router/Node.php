@@ -187,10 +187,14 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
         return $this->children;
     }
 
+    /**
+     * Remove a Node child with his key
+     * 
+     * @param string $key
+     * @throws NodeChildKeyMismatchException 
+     * @return void
+     */
     public function removeChild(string $key){
-        if(!isset($this->children[$key])){
-            throw new NodeChildKeyMismatchException("The Node with the key : $key is not found");
-        }
         unset($this->children[$key]);
     }
     /**
