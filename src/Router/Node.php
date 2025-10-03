@@ -230,7 +230,7 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
     }
 
     public function __toString(): string {
-        return "Node(key: {$this->key}, uuid: {$this->uuid})";
+        return "$this->key";
     }
 
     // Implementation of Countable
