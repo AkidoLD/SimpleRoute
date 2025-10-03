@@ -159,17 +159,26 @@ class UriSlicer {
     }
 
     /**
+     * Get the URI string of this `UriSlicer`
+     *
+     *  This is an alias of {@see UriSlicer::getURI()()}
+     * 
+     * @return string
+     */
+    public function toString(): string {
+        return $this->getURI();
+    }
+
+    /**
      * Allow to easly get the URI string use in the UriSlicer
      * 
-     * This is an alias of {@see UriSlicer::getUri()}
+     * This is an alias of {@see UriSlicer::toString()}
      * 
      * @return string
      */
     public function __toString(): string{
-        return $this->getURI();
+        return $this->toString();
     }
-
-    // ... ton code existant ...
 
     /**
      * Factory to create a UriSlicer from an array of segments.
