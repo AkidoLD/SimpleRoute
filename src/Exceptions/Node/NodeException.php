@@ -2,4 +2,6 @@
 
 namespace SimpleRoute\Exceptions\Node;
 
-class NodeException extends \Exception {}
+use Exception;
+
+class NodeException extends Exception {}

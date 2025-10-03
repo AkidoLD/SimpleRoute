@@ -164,7 +164,7 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
     /**
      * Check if this Node has a handler.
      */
-    public function hadHandler(): bool {
+    public function hasHandler(): bool {
         return $this->handler !== null;
     }
     

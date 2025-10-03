@@ -112,6 +112,15 @@ class UriSlicer {
     }
 
     /**
+     * Get the current URI segment
+     * 
+     * @return string|null
+     */
+    public function current(): ?string{
+        return $this->segments[$this->cursor] ?? null;
+    }
+
+    /**
      * Returns all unused segments from the current cursor to the end.
      * This also advances the cursor to the end.
      * 

@@ -5,5 +5,3 @@ namespace SimpleRoute\Exceptions\Router;
 use Exception;
 
 class RouterException extends Exception {}
-
-class RouteNotFoundException extends RouterException{}

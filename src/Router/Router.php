@@ -110,7 +110,7 @@ class Router {
                 throw new RouteNotFoundException('');
             }
     
-            $node->execute();
+            return $node->execute();
     
         }catch(Exception $e){
             if($this->failureHandler){
