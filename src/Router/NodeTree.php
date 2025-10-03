@@ -94,7 +94,7 @@ class NodeTree {
         }
     
         $keys = [];
-        $current = $node->getParent();
+        $current = $node;
     
         while ($current !== null) {
             if ($current === $stopAt) {
