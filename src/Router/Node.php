@@ -191,12 +191,12 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
      * Remove a Node child with his key
      * 
      * @param string $key
-     * @throws NodeChildKeyMismatchException 
      * @return void
      */
     public function removeChild(string $key){
         unset($this->children[$key]);
     }
+    
     /**
      * Check if this Node is a leaf (has no children).
      */
