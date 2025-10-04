@@ -46,6 +46,17 @@ class NodeTree {
     }
 
     /**
+     * Set the activeNode to rootNode
+     * 
+     * Utilile when you want to restart the NodeTree travel
+     * 
+     * @return void
+     */
+    public function resetActiveNode(){
+        $this->activeNode = $this->rootNode;
+    }
+
+    /**
      * Move the active node to its child with the given key.
      *
      * Updates the active node to the child matching the provided key.
