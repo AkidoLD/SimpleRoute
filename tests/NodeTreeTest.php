@@ -41,7 +41,7 @@ class NodeTreeTest extends TestCase
 
         // Node is root -> exception
         $this->expectException(NodeIsRootNodeException::class);
-        iterator_to_array(NodeTree::traceNodeParent($this->root, $this->root));
+        NodeTree::traceNodeParent($this->root, $this->root);
     }
 
     public function testGetPathExcludesRoot()
