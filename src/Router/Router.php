@@ -88,45 +88,72 @@ class Router {
     }
 
     /**
-     * Traverse the NodeTree using a UriSlicer.
-     * 
-     * Throws RouteNotFoundException if a segment does not match.
-     * Executes the node handler when traversal completes.
-     * Calls the failure handler if defined when any exception occurs.
+     * Dispatch the URI using a NodeTree.
      *
-     * @param UriSlicer $uriSlicer
+     * This method traverses the NodeTree using the provided UriSlicer.
+     * It executes the handler of the matching node when traversal completes.
+     * 
+     * Behavior:
+     * - Throws RouteNotFoundException if a segment does not match any node.
+     * - Calls the failure handler, if defined, when any exception occurs.
+     *
+     * Example:
+     * ```php
+     * $router->dispatch(new UriSlicer('/api/users'));
+     * ```
+     *
+     * @param UriSlicer $uriSlicer The URI to match and traverse in the NodeTree
+     * @return mixed The result of the node handler execution
+     * @throws RouteNotFoundException If no matching node is found
+     * @throws Exception If an exception occurs and no failure handler is defined
      */
-    public function makeRoute(UriSlicer $uriSlicer){
-        $node = null;
-        try{
-            while($uriSlicer->hasNext()){
-                $node = $this->nodeTree->nextNode($uriSlicer->next());
-                if($node === null){
-                    throw new RouteNotFoundException('');
-                }
+    public function dispatch(UriSlicer $uriSlicer) {
+        $node = $this->nodeTree->getActiveNode();
+        try {
+            while($uriSlicer->hasNext() && $node !== null){
+                $segment = $uriSlicer->next();
+                $node = $this->nodeTree->nextNode($segment);
             }
-    
+
             if($node === null){
-                throw new RouteNotFoundException('');
+                throw new RouteNotFoundException("Route not found at '{$uriSlicer->getURI()}'");
             }
-    
+
             return $node->execute();
-    
-        }catch(Exception $e){
+
+        } catch(Exception $e){
             if($this->failureHandler){
                 ($this->failureHandler)($e);
-            }else{
+            } else {
                 throw $e;
             }
         }
+    }   
+
+    /**
+     * Dispatch the URI using a NodeTree.
+     *
+     * @param UriSlicer $uriSlicer The URI to traverse
+     * @return mixed The result of the node handler
+     * @throws RouteNotFoundException If the route doesn't exist
+     * @throws Exception If an exception occurs and no failure handler is set
+     * @deprecated Use dispatch() instead
+     */
+    #[\ReturnTypeWillChange]
+    public function makeRoute(UriSlicer $uriSlicer) {
+        trigger_error(
+            'makeRoute() is deprecated, use dispatch() instead',
+            E_USER_DEPRECATED
+        );
+        return $this->dispatch($uriSlicer);
     }
     
     /**
-     * Shortcut to call makeRoute() directly using parentheses.
+     * Shortcut to call `dispatch()` directly using parentheses.
      *
      * @param UriSlicer $uriSlicer
      */
     public function __invoke(UriSlicer $uriSlicer): void {
-        $this->makeRoute($uriSlicer);
+        $this->dispatch($uriSlicer);
     }
 }
