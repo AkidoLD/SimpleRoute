@@ -152,8 +152,9 @@ class Router {
      * Shortcut to call `dispatch()` directly using parentheses.
      *
      * @param UriSlicer $uriSlicer
+     * @return mixed The return of `dispatch` methode
      */
-    public function __invoke(UriSlicer $uriSlicer): void {
-        $this->dispatch($uriSlicer);
+    public function __invoke(UriSlicer $uriSlicer): mixed {
+        return $this->dispatch($uriSlicer);
     }
 }
