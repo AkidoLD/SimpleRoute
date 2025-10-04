@@ -41,12 +41,11 @@ class UriSlicer {
     /**
      * Constructs a new UriSlicer instance from a given URI.
      *
-     * @param string|null $URI The request URI (e.g. "/auth/login/edit").
-     *                         If null, the slicer will be empty until setURI() is called.
+     * @param string $URI The request URI (e.g. "/auth/login/edit").
      */
-    public function __construct(?string $URI = null) {
+    public function __construct(string $URI = "") {
         $this->segments = $URI ? $this->parsePath($URI) : [];
-        $this->URI = $URI ?? "";
+        $this->URI = $URI ;
         $this->cursor = 0;
     }
 
