@@ -64,8 +64,21 @@ class NodeTree {
      * @param string $key The key of the child node to move to
      * @return Node|null The new active node, or null if no child with the key exists
      */
-    public function nextNode(string $key): ?Node{
+    public function moveToChild(string $key): ?Node{
         return $this->activeNode = $this->activeNode[$key];
+    }
+
+    /**
+     * @deprecated Use moveToChild() instead
+     * @see moveToChild()
+     */
+    public function nextNode(string $key): ?Node {
+        trigger_error(
+            'nextNode() is deprecated, use moveToChild() instead',
+            E_USER_DEPRECATED
+        );
+
+        return $this->moveToChild($key);
     }
 
     /**
@@ -87,7 +100,7 @@ class NodeTree {
         $this->rootNode = $rootNode;
         $this->activeNode = $rootNode;
     }
-
+    
     /**
      * Trace all parents of a node up to (but not including) the stop node.
      *
@@ -96,43 +109,63 @@ class NodeTree {
      * @return array Keys of parent nodes, ordered from top → bottom
      * @throws NodeIsRootNodeException If the node itself is the stop node
      * @throws NodeNotInTreeException  If stopAt is specified but not found
+     * 
+     * @deprecated 2.0.0 Use tracePathKeys() instead
      */
     public static function traceNodeParent(Node $node, ?Node $stopAt = null): array {
-        if ($stopAt !== null && $node === $stopAt) {
-            throw new NodeIsRootNodeException(
-                "Node '{$node->getKey()}' is the root node and has no parents"
-            );
-        }
-    
+        @trigger_error(
+            'Method ' . __METHOD__ . ' is deprecated since version 2.0.0, use tracePathKeys() instead.',
+            E_USER_DEPRECATED
+        );
+        return self::tracePathKeys($node, $stopAt);
+    }
+
+    /**
+     * Trace the path keys from a node up to (but not including) the stop node.
+     * 
+     * Traverses up the tree from the given node, collecting keys until reaching
+     * the stop node (which is excluded). If no stop node is provided, traverses
+     * until the root's parent (null), thus including the root in the result.
+     *
+     * @param Node $node The node to trace the path from
+     * @param Node|null $stopAt Node to stop at (excluded). If null, includes all nodes up to root.
+     * @return array Path keys ordered from top to bottom
+     * @throws NodeNotInTreeException If stopAt is specified but not reached
+     * 
+     * @since 1.3.0
+     */
+    public static function tracePathKeys(Node $node, ?Node $stopAt = null): array {
+        //Cas invalide
+        //- Cas ou la node n'est pas dans l'arbre si $stopAt est defini
         $keys = [];
         $current = $node;
-    
-        while ($current !== null) {
-            if ($current === $stopAt) {
-                break;
-            }
+
+        //Get the key of the current Node while the cur != null et $stopAt
+        while($current && $current !== $stopAt){
             $keys[] = $current->getKey();
             $current = $current->getParent();
         }
-    
-        if ($stopAt !== null && $current !== $stopAt) {
+
+        // If stopAt was specified but not reached, node is not in the tree
+        if($stopAt !== null && $current !== $stopAt){
             throw new NodeNotInTreeException(
                 "Node '{$node->getKey()}' is not under the specified stop node '{$stopAt->getKey()}'"
             );
         }
-    
+
+        //Reverse the array for respect the other of correct path
         return array_reverse($keys);
     }
     
     /**
-     * Get the full path (keys) from root to the node (excluding root).
+     * Get the full path keys from root to the node (excluding root).
      *
-     * @param Node $node Node to get the path for
-     * @return array Path from root → node, excluding root key
+     * @param Node $node Node to get the path keys for
+     * @return array Path keys from root → node, excluding root key
      * @throws NodeNotInTreeException If node is not in this tree
      */
-    public function getPath(Node $node): array {
-        return self::traceNodeParent($node, $this->rootNode);
+    public function getPathKeys(Node $node): array {
+        return self::tracePathKeys($node, $this->rootNode);
     }
     
     /**
@@ -142,12 +175,8 @@ class NodeTree {
      * @return bool True if node belongs to this tree, false otherwise
      */
     public function contains(Node $node): bool {
-        if ($this->rootNode === $node) {
-            return true;
-        }
-    
         try {
-            $this->getPath($node);
+            $this->getPathKeys($node);
             return true;
         } catch (NodeNotInTreeException) {
             return false;
@@ -165,6 +194,6 @@ class NodeTree {
      * @return Node|null
      */
     public function __invoke(string $key): ?Node{
-        return $this->nextNode($key);
+        return $this->moveToChild($key);
     }
 }
