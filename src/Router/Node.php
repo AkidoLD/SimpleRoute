@@ -8,10 +8,10 @@ use Countable;
 use IteratorAggregate;
 
 // External libs
-use Ramsey\Uuid\Uuid;
 use SimpleRoute\Exceptions\Node\NodeChildIsNotANodeException;
 use SimpleRoute\Exceptions\Node\NodeChildKeyMismatchException;
 use SimpleRoute\Exceptions\Node\NodeHandlerNotSetException;
+use SimpleRoute\Exceptions\Node\NodeKeyIsEmptyException;
 use SimpleRoute\Exceptions\Node\NodeSelfReferenceException;
 
 /**
@@ -21,8 +21,8 @@ use SimpleRoute\Exceptions\Node\NodeSelfReferenceException;
  * It can hold multiple children (other `Node` instances) and an optional handler
  * that will be executed when the corresponding route is reached.
  *
- * Each `Node` has a key unique within its parent, and a globally unique UUID
- * to distinguish it from other nodes that may share the same key.
+ * Each `Node` has a key unique within its parent. Nodes are distinguished by
+ * their object references rather than generated identifiers.
  *
  * Implements:
  * - `Countable`: allows counting the number of children.
@@ -31,11 +31,10 @@ use SimpleRoute\Exceptions\Node\NodeSelfReferenceException;
  *
  * Example usage:
  * ```php
- * $node = new Node('auth');
- * $node->setHandler(fn() => echo "Authentication");
- * $child = new Node('login');
- * $node->addChild($child);
- * $node('param1'); // executes the handler
+ * $root = new Node('root');
+ * $auth = new Node('auth', parent: $root);
+ * $auth->setHandler(fn() => echo "Authentication");
+ * $login = new Node('login', parent: $auth);
  * ```
  *
  * This class is mainly used by `NodeTree` and `Router` to dynamically
@@ -49,15 +48,6 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
      * @var string
      */
     private string $key;
-
-    /**
-     * The unique identifier (UUID) of this Node.
-     *
-     * Useful when multiple nodes share the same key.
-     *
-     * @var string (read-only)
-     */
-    private readonly string $uuid;
 
     /**
      * The parent of this Node.
@@ -85,12 +75,31 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
      */
     private $handler = null;
 
-    public function __construct(string $key, ?callable $handler = null) {
-        $this->key = $key;
+    public function __construct(string $key, ?callable $handler = null, ?Node $parent = null) {
+        $this->setKey($key);
         $this->setHandler($handler);
-        $this->uuid = Uuid::uuid4()->toString();
         $this->children = [];
         $this->parent = null;
+        
+        // Try to add this Node to its parent
+        $parent?->addChild($this);
+    }
+
+    /**
+     * Set the key of this Node
+     * 
+     * @param string $key
+     * @throws NodeKeyIsEmptyException if the key is empty
+     * @return void
+     */
+    private function setKey(string $key): void {
+        $key = trim($key);
+        if(empty($key)){
+            throw new NodeKeyIsEmptyException(
+                "A Node key can't be empty"
+            );
+        }
+        $this->key = $key;
     }
 
     /**
@@ -98,13 +107,6 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function getKey(): string {
         return $this->key;
-    }
-
-    /**
-     * Get the UUID of this Node.
-     */
-    public function getUuid(): string {
-        return $this->uuid;
     }
     
     /**
@@ -118,14 +120,23 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
 
     /**
      * Add a child Node.
+     * 
+     * Note: If the child already has a parent, it will be removed from its previous
+     * parent and reassigned to this Node.
      *
      * @param Node $child The Node to add.
      * @throws NodeSelfReferenceException If attempting to add the Node to itself.
      */
     public function addChild(Node $child): void {
-        if ($child->getUuid() === $this->uuid) {
+        // Check if the node we want to add is not itself
+        if ($child === $this) {
             throw new NodeSelfReferenceException('A Node cannot be its own child.');
         }
+
+        // Remove the Node from its previous parent if it's not null
+        $child->getParent()?->removeChild($child->getKey());
+        
+        // Change the node parent
         $child->parent = $this;
         $this->children[$child->getKey()] = $child;
     }
@@ -188,20 +199,47 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
     }
 
     /**
-     * Remove a Node child with his key
-     * 
-     * @param string $key
-     * @return void
+     * Remove a child Node by its key.
+     *
+     * If the Node has no children or the given key does not exist,
+     * the method returns null. Otherwise, it removes the child,
+     * clears its parent reference, and returns it.
+     *
+     * @param string $key The key of the child to remove
+     * @return Node|null The removed Node if found, null otherwise
      */
-    public function removeChild(string $key){
-        unset($this->children[$key]);
+    public function removeChild(string $key): ?Node {
+        // If this Node has no children, nothing to remove
+        if (!$this->hasChildren()) {
+            return null;
+        }
+    
+        // Try to get the child by key
+        if ($node = $this->getChild($key)) {
+            unset($this->children[$key]);
+            $node->parent = null;
+            return $node;
+        }
+    
+        return null;
     }
     
     /**
+     * Check if this Node has children
+     * 
+     * @return bool
+     */
+    public function hasChildren(): bool {
+        return !empty($this->children);
+    }
+
+    /**
      * Check if this Node is a leaf (has no children).
+     * 
+     * @return bool
      */
     public function isLeaf(): bool {
-        return empty($this->children);
+        return !$this->hasChildren();
     }
 
     /**
@@ -233,8 +271,13 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
         return $this->execute(...$args);
     }
 
+    /**
+     * Return the key of this Node
+     * 
+     * @return string the key of this Node
+     */
     public function __toString(): string {
-        return "$this->key";
+        return $this->getKey();
     }
 
     // Implementation of Countable
@@ -256,13 +299,13 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
      *
      * Behavior:
      * - `$value` must be a `Node`.
-     * - If `$offset` is provided, it must match the Node’s key.
-     * - If `$offset` is null, the Node’s key will be used automatically.
+     * - If `$offset` is provided, it must match the Node's key.
+     * - If `$offset` is null, the Node's key will be used automatically.
      *
      * @param mixed $offset The child key (optional).
      * @param mixed $value The Node to add.
      * @throws NodeChildIsNotANodeException If $value is not a Node.
-     * @throws NodeChildKeyMismatchException If $offset does not match the Node’s key.
+     * @throws NodeChildKeyMismatchException If $offset does not match the Node's key.
      */
     public function offsetSet(mixed $offset, mixed $value): void {
         if (!($value instanceof Node)) {
@@ -273,11 +316,11 @@ class Node implements Countable, ArrayAccess, IteratorAggregate {
         
         if ($offset !== null && $offset !== $value->getKey()) {
             throw new NodeChildKeyMismatchException(
-                'Error: The offset must match the Node’s key.'
+                "Error: The offset must match the Node's key."
             );
         }
     
-        $this->children[$value->getKey()] = $value;
+        $this->addChild($value);
     }
     
     public function offsetUnset(mixed $offset): void {
