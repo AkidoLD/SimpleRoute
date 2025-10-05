@@ -9,6 +9,7 @@ use SimpleRoute\Router\Node;
 use SimpleRoute\Router\UriSlicer;
 use SimpleRoute\Exceptions\Router\RouteNotFoundException;
 use SimpleRoute\Exceptions\Node\NodeHandlerNotSetException;
+use SimpleRoute\Exceptions\Router\InvalidRouteException;
 
 /**
  * Tests complets pour la classe Router
@@ -83,7 +84,7 @@ class RouterTest extends TestCase
         $router = new Router($this->nodeTree);
         $uriSlicer = new UriSlicer('/user');
         
-        $router->makeRoute($uriSlicer);
+        $router->dispatch($uriSlicer);
         
         $this->assertTrue($executed, 'Handler should have been executed');
     }
@@ -100,7 +101,7 @@ class RouterTest extends TestCase
         $router = new Router($this->nodeTree);
         $uriSlicer = new UriSlicer('/user/profile');
         
-        $router->makeRoute($uriSlicer);
+        $router->dispatch($uriSlicer);
         
         $this->assertEquals('profile-page', $result);
     }
@@ -115,7 +116,7 @@ class RouterTest extends TestCase
         $router = new Router($this->nodeTree, $failureHandler);
         $uriSlicer = new UriSlicer('/nonexistent');
         
-        $router->makeRoute($uriSlicer);
+        $router->dispatch($uriSlicer);
         
         $this->assertInstanceOf(RouteNotFoundException::class, $caughtException);
     }
@@ -127,7 +128,7 @@ class RouterTest extends TestCase
         $router = new Router($this->nodeTree);
         $uriSlicer = new UriSlicer('/nonexistent');
         
-        $router->makeRoute($uriSlicer);
+        $router->dispatch($uriSlicer);
     }
 
     public function testIsCallableViaInvoke()
@@ -153,10 +154,8 @@ class RouterTest extends TestCase
         $router = new Router($this->nodeTree);
         $uriSlicer = new UriSlicer('/user');
         
-        $this->expectException(NodeHandlerNotSetException::class);
-        $this->expectExceptionMessage("The node with key 'user' has no handler defined.");
-        
-        $router->makeRoute($uriSlicer);
+        $this->expectException(InvalidRouteException::class);
+        $router->dispatch($uriSlicer);
     }
 
     public function testHandlesDeepNestedRoutes()
@@ -176,7 +175,7 @@ class RouterTest extends TestCase
         $router = new Router($this->nodeTree);
         $uriSlicer = new UriSlicer('/api/v1/users/posts');
         
-        $router->makeRoute($uriSlicer);
+        $router->dispatch($uriSlicer);
         
         $this->assertEquals('api-v1-users-posts', $result);
     }
@@ -198,7 +197,7 @@ class RouterTest extends TestCase
         $router = new Router($this->nodeTree, $failureHandler);
         $uriSlicer = new UriSlicer('/api/v1/users'); // 'v1' n’existe pas
         
-        $router->makeRoute($uriSlicer);
+        $router->dispatch($uriSlicer);
         
         $this->assertInstanceOf(RouteNotFoundException::class, $caughtException);
     }
@@ -216,7 +215,7 @@ class RouterTest extends TestCase
         $router = new Router($this->nodeTree, $failureHandler);
         $uriSlicer = new UriSlicer('/invalid/route');
         
-        $router->makeRoute($uriSlicer);
+        $router->dispatch($uriSlicer);
         
         $this->assertEquals(RouteNotFoundException::class, $exceptionClass);
     }
@@ -230,7 +229,7 @@ class RouterTest extends TestCase
         $router = new Router($this->nodeTree);
         $uriSlicer = new UriSlicer('/user-profile');
         
-        $router->makeRoute($uriSlicer);
+        $router->dispatch($uriSlicer);
         
         $this->assertEquals('special', $result);
     }
@@ -246,7 +245,7 @@ class RouterTest extends TestCase
         $router = new Router($this->nodeTree);
         
         $uriSlicer1 = new UriSlicer('/home');
-        $router->makeRoute($uriSlicer1);
+        $router->dispatch($uriSlicer1);
         
         $this->assertEquals('home', $this->nodeTree->getActiveNode()->getKey());
         
@@ -254,7 +253,7 @@ class RouterTest extends TestCase
         $router->setNodeTree($this->nodeTree);
         
         $uriSlicer2 = new UriSlicer('/about');
-        $router->makeRoute($uriSlicer2);
+        $router->dispatch($uriSlicer2);
         
         $this->assertEquals('about', $this->nodeTree->getActiveNode()->getKey());
     }
@@ -268,31 +267,10 @@ class RouterTest extends TestCase
         $uriSlicer = new UriSlicer('/test');
         
         ob_start();
-        $router->makeRoute($uriSlicer);
+        $router->dispatch($uriSlicer);
         $output = ob_get_clean();
         
         $this->assertEquals('', $output);
-    }
-
-    public function testCatchesAnyExceptionTypeInFailureHandler()
-    {
-        $node = new Node('error', function() {
-            throw new \RuntimeException('Custom error');
-        });
-        $this->rootNode->addChild($node);
-        
-        $caughtException = null;
-        $failureHandler = function($e) use (&$caughtException) {
-            $caughtException = $e;
-        };
-        
-        $router = new Router($this->nodeTree, $failureHandler);
-        $uriSlicer = new UriSlicer('/error');
-        
-        $router->makeRoute($uriSlicer);
-        
-        $this->assertInstanceOf(\RuntimeException::class, $caughtException);
-        $this->assertEquals('Custom error', $caughtException?->getMessage());
     }
 
     public function testWorksWithUriSlicerFactoryMethod()
@@ -304,8 +282,21 @@ class RouterTest extends TestCase
         $router = new Router($this->nodeTree);
         $uriSlicer = UriSlicer::fromSegments(['api']);
         
-        $router->makeRoute($uriSlicer);
+        $router->dispatch($uriSlicer);
         
         $this->assertEquals('api-called', $result);
+    }
+
+    public function testNodeTreeIsResetAfterDispatch(){
+        $users = new Node('users', parent : $this->rootNode, handler: fn() => "users");
+        $list = new Node('list', parent : $users, handler: fn() => "list");
+        $listPath = $this->nodeTree->getPathKeys($list);
+        $slicer = UriSlicer::fromSegments($listPath);
+
+        //
+        $route = new Router($this->nodeTree);
+        $result1 = $route->dispatch($slicer->reset());
+        $result2 = $route->dispatch($slicer->reset());
+        $this->assertEquals($result1, $result2, "The result 1 : $result1 is not equal to the result 2 : $result2");
     }
 }

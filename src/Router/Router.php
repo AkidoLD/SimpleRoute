@@ -3,7 +3,9 @@
 namespace SimpleRoute\Router;
 
 use Exception;
+use SimpleRoute\Exceptions\Router\InvalidRouteException;
 use SimpleRoute\Exceptions\Router\RouteNotFoundException;
+use SimpleRoute\Exceptions\Router\RouterException;
 
 /**
  * Router engine for matching URIs against a NodeTree.
@@ -105,30 +107,39 @@ class Router {
      * @param UriSlicer $uriSlicer The URI to match and traverse in the NodeTree
      * @return mixed The result of the node handler execution
      * @throws RouteNotFoundException If no matching node is found
-     * @throws Exception If an exception occurs and no failure handler is defined
+     * @throws InvalidRouteException If no failure handler is defined to the node
      */
     public function dispatch(UriSlicer $uriSlicer) {
+        $this->nodeTree->resetActiveNode();
         $node = $this->nodeTree->getActiveNode();
+        
         try {
             while($uriSlicer->hasNext() && $node !== null){
                 $segment = $uriSlicer->next();
-                $node = $this->nodeTree->nextNode($segment);
+                $node = $this->nodeTree->moveToChild($segment);
             }
-
+    
             if($node === null){
-                throw new RouteNotFoundException("Route not found at '{$uriSlicer->getURI()}'");
+                throw new RouteNotFoundException(
+                    "Route not found at '{$uriSlicer->getURI()}'"
+                );
             }
-
+    
+            if(!$node->hasHandler()){
+                throw new InvalidRouteException(
+                    "Route '{$uriSlicer->getURI()}' exists but has no handler defined"
+                );
+            }
+            
             return $node->execute();
-
-        } catch(Exception $e){
+            
+        } catch(RouterException $e){
             if($this->failureHandler){
-                ($this->failureHandler)($e);
-            } else {
-                throw $e;
+                return ($this->failureHandler)($e);
             }
+            throw $e;
         }
-    }   
+    }
 
     /**
      * Dispatch the URI using a NodeTree.

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `setKey()` private method to validate and prevent invalid keys
 - Ability to set the parent of a `Node` at construction time
 - Automatic parent cleanup when removing a `Node` from its parent
+- `InvalidRouteException` in `Router` class. It is call when a route is found but no handler is attache
 
 ### Changed
 - `Node::__toString()` now returns only the node's key
@@ -22,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Improved test coverage for `NodeTree` class (37 tests)
 - Improved test coverage for `Node` class (55 tests)
 - Improved code documentation
+- `UriSlicer::reset()` now reset itself for cascade calling
+- Reset the `NodeTree` before `Router::dispatch()` method is called
+- `Router::dispatch()` methode only catch `RouterException`
+- Improved test coverage for `Router` class (19 tests)
 
 ### Deprecated
 - `traceNodeParent()` method in `NodeTree`: Use `tracePathKeys()` instead (will be removed in 2.0.0)
