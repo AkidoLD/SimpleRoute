@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+
+## [1.1.0] - 2025-10-05
 ### Added
 - `tracePathKeys()` static method in `NodeTree` class to trace path keys from a node
 - `getPathKeys()` instance method in `NodeTree` class to get path keys excluding root
@@ -56,7 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## Links
 
-[Unreleased]: https://github.com/AkidoLD/SimpleRoute/compare/v1.0.2...HEAD  
+[Unreleased]: https://github.com/AkidoLD/SimpleRoute/compare/v1.1.0...HEAD  
+[1.0.2]: https://github.com/AkidoLD/SimpleRoute/compare/v1.0.2...v1.1.0  
 [1.0.2]: https://github.com/AkidoLD/SimpleRoute/compare/v1.0.1...v1.0.2  
 [1.0.1]: https://github.com/AkidoLD/SimpleRoute/compare/v1.0.0...v1.0.1  
 [1.0.0]: https://github.com/AkidoLD/SimpleRoute/releases/tag/v1.0.0
