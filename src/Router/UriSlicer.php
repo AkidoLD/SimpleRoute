@@ -77,10 +77,11 @@ class UriSlicer {
     /**
      * Resets the cursor back to the beginning of the segments.
      *
-     * @return void
+     * @return UriSlicer For chained call
      */
-    public function reset(): void {
+    public function reset(): UriSlicer {
         $this->cursor = 0;
+        return $this;
     }
 
     /**
