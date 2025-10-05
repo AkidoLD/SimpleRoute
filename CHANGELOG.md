@@ -6,24 +6,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 ### Added
+- `tracePathKeys()` static method in `NodeTree` class to trace path keys from a node
+- `getPathKeys()` instance method in `NodeTree` class to get path keys excluding root
 - `toString()` method in `UriSlicer` class
-- The key of the Node we want the trace parent with `traceNodeParent()` static method of NodeTree
-- Add `dispatch()` method for replace `makeRoute()`.
+- `dispatch()` method as replacement for `makeRoute()`
+- `NodeKeyIsEmptyException` exception to prevent creating a `Node` with an empty key
+- `setKey()` private method to validate and prevent invalid keys
+- Ability to set the parent of a `Node` at construction time
+- Automatic parent cleanup when removing a `Node` from its parent
 
 ### Changed
-- Only return the key of a Node when `__toString()` method is called
-- Deprecate `makeRoute()` method
+- `Node::__toString()` now returns only the node's key
+- `Node::removeChild()` now sets the removed child's parent to null
+- `Node` keys are now immutable after construction
+- Improved test coverage for `NodeTree` class (37 tests)
+- Improved test coverage for `Node` class (55 tests)
+- Improved code documentation
+
+### Deprecated
+- `traceNodeParent()` method in `NodeTree`: Use `tracePathKeys()` instead (will be removed in 2.0.0)
+- `nextNode()` method in `NodeTree`: Use `moveToChild()` instead (will be removed in 2.0.0)
+- `makeRoute()` method: Use `dispatch()` instead (will be removed in 2.0.0)
 
 ### Removed
 - Exception when trying to remove a non-existent Node child
+- `ramsey/uuid` dependency and all UUID-related functionality
+- Node UUID property and related methods
 
 ## [1.0.2] - 2025-10-03
 ### Removed
-- Removed `bootstrap.php` file
+- `bootstrap.php` file
 
 ## [1.0.1] - 2025-10-03
 ### Added
-- Added `.gitattributes` to filter unwanted elements when downloading the library
+- `.gitattributes` to filter unwanted elements when downloading the library
 
 ## [1.0.0] - 2025-10-03
 ### Added
