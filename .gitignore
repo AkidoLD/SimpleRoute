@@ -38,3 +38,4 @@ Thumbs.db
 /.phpunit.result.cache
 /coverage/
 /.cache/
+.VSCodeCounter
