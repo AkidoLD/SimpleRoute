@@ -1,12 +1,12 @@
 # SimpleRoute
 
-> PHP routing library based on a tree structure
+> A PHP routing library based on a tree structure
 
 ## Why SimpleRoute?
 
-Traditional PHP routers (Laravel, Symfony) use flat arrays to define routes.
+Traditional PHP routers (like Laravel or Symfony) use flat arrays to define routes.
 
-**Problem:** With nested routes, the code becomes repetitive and harder to read:
+**Problem:** With nested routes, the code quickly becomes repetitive and harder to maintain:
 
 ```php
 // Classic router
@@ -17,32 +17,46 @@ $routes = [
 ];
 ```
 
-**Solution:** SimpleRoute uses a tree structure that naturally reflects the hierarchy of URLs:
+**Solution:**
+SimpleRoute uses a **tree structure** that naturally reflects the hierarchy of URLs.
+
+You can build your route tree in **two ways** 👇
+
+### 🧱 Classic method (explicit)
 
 ```php
-// SimpleRoute
 $root->addChild($api);
 $api->addChild($users);
 $users->addChild($profile);
 $users->addChild($settings);
 ```
 
-**Result:** Cleaner code, no duplication, and an obvious visual structure.
+### ⚡ Simplified method (modern)
+
+```php
+$root = new Node('root');
+$api = new Node('api', parent: $root);
+$users = new Node('users', parent: $api);
+$profile = new Node('profile', parent: $users);
+$settings = new Node('settings', parent: $users);
+```
+
+**Result:** Cleaner code, no duplication, and a clear visual hierarchy.
 
 ---
 
-## Features
+## ✨ Features
 
-* **Tree-based structure** – Routes are organized as parent/child, just like real URLs
-* **O(h) performance** – Fast lookup based on tree depth
-* **47 unit tests** – Reliable code (~95% coverage)
-* **Type-safe PHP 8.1+** – Full type hints to prevent bugs
-* **Lightweight** – Only dependency: `ramsey/uuid`
-* **Typed exceptions** – Each error has its own class for easier debugging
+* 🌳 **Tree-based structure** – Routes are organized hierarchically (parent/child), just like real URLs
+* ⚡ **O(h) performance** – Fast route lookup based on tree depth
+* ✅ **119 unit tests** – Reliable code with high coverage
+* 🧠 **Type-safe (PHP 8.1+)** – Full type hints to prevent runtime errors
+* 🧩 **Typed exceptions** – Each error has its own class for easier debugging
+* 🪶 **Lightweight** – Zero external dependencies
 
 ---
 
-## Installation
+## 🚀 Installation
 
 ### Via Composer (recommended)
 
@@ -60,57 +74,61 @@ composer install
 
 ---
 
-## Usage
+## 🧩 Usage Example
 
 ```php
 use SimpleRoute\Router\{Node, NodeTree, Router, UriSlicer};
 
 // Create nodes
 $root = new Node('root');
-$api = new Node('api');
+$api = new Node('api', parent: $root);
 $users = new Node('users', function() {
     echo json_encode(['users' => ['Alice', 'Bob']]);
-});
+}, parent: $api);
 
-// Build the tree
-$root->addChild($api);
-$api->addChild($users);
-
-// Router
+// Router setup
 $tree = new NodeTree($root);
 $router = new Router($tree);
 
 // Match an URL
 $uri = new UriSlicer('/api/users');
-$router->makeRoute($uri);
+$router->dispatch($uri);
+
 // Output: {"users":["Alice","Bob"]}
 ```
 
 ---
 
-## Documentation
+## 📚 Documentation
 
-* See `/examples` for more examples
-* See `/tests` for complete usage cases
+* Check the [`/examples`](examples) directory for more usage examples
+* See [`/tests`](tests) for detailed test cases and real-world usage patterns
 
 ---
 
-## Tests
+## 🧪 Tests
 
 ```bash
 ./vendor/bin/phpunit
 ```
 
-**Stats:** 119 tests, ~95% coverage
+**Stats:** 119 tests – high coverage ✅
+
+To generate a coverage report:
+
+```bash
+XDEBUG_MODE=coverage ./vendor/bin/phpunit --coverage-html coverage
+```
 
 ---
 
-## License
+## 📜 License
 
-MIT
+[MIT License](LICENSE)
 
 ---
 
-## Author
+## 👤 Author
 
-**Akido LD** – [@AkidoLD](https://github.com/AkidoLD)
+**Akido LD**
+[GitHub: @AkidoLD](https://github.com/AkidoLD)

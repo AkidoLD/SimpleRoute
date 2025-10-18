@@ -16,18 +16,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `setKey()` private method to validate and prevent invalid keys
 - Ability to set the parent of a `Node` at construction time
 - Automatic parent cleanup when removing a `Node` from its parent
-- `InvalidRouteException` in `Router` class. It is call when a route is found but no handler is attache
+- `InvalidRouteException` in `Router` class. It is called when a route is found but no handler is attached
 
 ### Changed
+- Namespace changed from `SimpleRoute\\` to `AkidoLd\\SimpleRoute\\` for better PSR-4 consistency  
+  > ⚠️ All class imports must now use `AkidoLd\\SimpleRoute\\` instead of `SimpleRoute\\`.
+- Updated `composer.json` autoload section to match the new namespace
 - `Node::__toString()` now returns only the node's key
 - `Node::removeChild()` now sets the removed child's parent to null
 - `Node` keys are now immutable after construction
 - Improved test coverage for `NodeTree` class (37 tests)
 - Improved test coverage for `Node` class (55 tests)
 - Improved code documentation
-- `UriSlicer::reset()` now reset itself for cascade calling
+- `UriSlicer::reset()` now resets itself for cascade calling
 - Reset the `NodeTree` before `Router::dispatch()` method is called
-- `Router::dispatch()` methode only catch `RouterException`
+- `Router::dispatch()` method only catches `RouterException`
 - Improved test coverage for `Router` class (19 tests)
 
 ### Deprecated
@@ -39,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Exception when trying to remove a non-existent Node child
 - `ramsey/uuid` dependency and all UUID-related functionality
 - Node UUID property and related methods
+
 
 ## [1.0.2] - 2025-10-03
 ### Removed
@@ -58,8 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## Links
 
-[Unreleased]: https://github.com/AkidoLD/SimpleRoute/compare/v1.1.0...HEAD  
-[1.0.2]: https://github.com/AkidoLD/SimpleRoute/compare/v1.0.2...v1.1.0  
+[Unreleased]: https://github.com/AkidoLD/SimpleRoute/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/AkidoLD/SimpleRoute/compare/v1.0.2...v1.1.0  
 [1.0.2]: https://github.com/AkidoLD/SimpleRoute/compare/v1.0.1...v1.0.2  
 [1.0.1]: https://github.com/AkidoLD/SimpleRoute/compare/v1.0.0...v1.0.1  
 [1.0.0]: https://github.com/AkidoLD/SimpleRoute/releases/tag/v1.0.0
