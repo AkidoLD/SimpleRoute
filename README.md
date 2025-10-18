@@ -101,7 +101,7 @@ $router->makeRoute($uri);
 ./vendor/bin/phpunit
 ```
 
-**Stats:** 47 tests, ~95% coverage
+**Stats:** 119 tests, ~95% coverage
 
 ---
 

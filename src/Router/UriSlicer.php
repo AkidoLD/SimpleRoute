@@ -1,6 +1,6 @@
 <?php
 
-namespace SimpleRoute\Router;
+namespace AkidoLd\SimpleRoute\Router;
 
 /**
  * Class UriSlicer

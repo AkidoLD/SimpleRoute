@@ -1,5 +1,5 @@
 <?php
 
-namespace SimpleRoute\Exceptions\Node;
+namespace AkidoLd\SimpleRoute\Exceptions\Node;
 
 class NodeChildKeyMismatchException extends NodeException{}

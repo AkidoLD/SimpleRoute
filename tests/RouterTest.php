@@ -3,13 +3,13 @@
 namespace SimpleRoute\Tests\Router;
 
 use PHPUnit\Framework\TestCase;
-use SimpleRoute\Router\Router;
-use SimpleRoute\Router\NodeTree;
-use SimpleRoute\Router\Node;
-use SimpleRoute\Router\UriSlicer;
-use SimpleRoute\Exceptions\Router\RouteNotFoundException;
-use SimpleRoute\Exceptions\Node\NodeHandlerNotSetException;
-use SimpleRoute\Exceptions\Router\InvalidRouteException;
+use AkidoLd\SimpleRoute\Router\Router;
+use AkidoLd\SimpleRoute\Router\NodeTree;
+use AkidoLd\SimpleRoute\Router\Node;
+use AkidoLd\SimpleRoute\Router\UriSlicer;
+use AkidoLd\SimpleRoute\Exceptions\Router\RouteNotFoundException;
+use AkidoLd\SimpleRoute\Exceptions\Node\NodeHandlerNotSetException;
+use AkidoLd\SimpleRoute\Exceptions\Router\InvalidRouteException;
 
 /**
  * Tests complets pour la classe Router

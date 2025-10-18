@@ -1,11 +1,11 @@
 <?php
 
-namespace SimpleRoute\Router;
+namespace AkidoLd\SimpleRoute\Router;
 
 use Exception;
-use SimpleRoute\Exceptions\Router\InvalidRouteException;
-use SimpleRoute\Exceptions\Router\RouteNotFoundException;
-use SimpleRoute\Exceptions\Router\RouterException;
+use AkidoLd\SimpleRoute\Exceptions\Router\InvalidRouteException;
+use AkidoLd\SimpleRoute\Exceptions\Router\RouteNotFoundException;
+use AkidoLd\SimpleRoute\Exceptions\Router\RouterException;
 
 /**
  * Router engine for matching URIs against a NodeTree.

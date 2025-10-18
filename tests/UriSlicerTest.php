@@ -1,7 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use SimpleRoute\Router\UriSlicer;
+use AkidoLd\SimpleRoute\Router\UriSlicer;
 
 final class UriSlicerTest extends TestCase
 {

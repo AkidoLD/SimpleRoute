@@ -1,5 +1,5 @@
 <?php
 
-namespace SimpleRoute\Exceptions\NodeTree;
+namespace AkidoLd\SimpleRoute\Exceptions\NodeTree;
 
 class NodeOutOfTreeException extends NodeTreeException {}

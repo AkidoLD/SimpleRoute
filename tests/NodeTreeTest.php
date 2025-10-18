@@ -1,9 +1,9 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use SimpleRoute\Router\NodeTree;
-use SimpleRoute\Router\Node;
-use SimpleRoute\Exceptions\NodeTree\NodeNotInTreeException;
+use AkidoLd\SimpleRoute\Router\NodeTree;
+use AkidoLd\SimpleRoute\Router\Node;
+use AkidoLd\SimpleRoute\Exceptions\NodeTree\NodeNotInTreeException;
 
 class NodeTreeTest extends TestCase
 {

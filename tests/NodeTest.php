@@ -1,13 +1,12 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use SimpleRoute\Exceptions\Node\NodeChildIsNotANodeException;
-use SimpleRoute\Exceptions\Node\NodeChildKeyMismatchException;
-use SimpleRoute\Exceptions\Node\NodeException;
-use SimpleRoute\Exceptions\Node\NodeHandlerNotSetException;
-use SimpleRoute\Exceptions\Node\NodeKeyIsEmptyException;
-use SimpleRoute\Exceptions\Node\NodeSelfReferenceException;
-use SimpleRoute\Router\Node;
+use AkidoLd\SimpleRoute\Exceptions\Node\NodeChildIsNotANodeException;
+use AkidoLd\SimpleRoute\Exceptions\Node\NodeChildKeyMismatchException;
+use AkidoLd\SimpleRoute\Exceptions\Node\NodeHandlerNotSetException;
+use AkidoLd\SimpleRoute\Exceptions\Node\NodeKeyIsEmptyException;
+use AkidoLd\SimpleRoute\Exceptions\Node\NodeSelfReferenceException;
+use AkidoLd\SimpleRoute\Router\Node;
 
 class NodeTest extends TestCase
 {

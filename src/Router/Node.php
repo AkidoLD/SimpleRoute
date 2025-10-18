@@ -1,6 +1,6 @@
 <?php
 
-namespace SimpleRoute\Router;
+namespace AkidoLd\SimpleRoute\Router;
 
 use ArrayAccess;
 use ArrayIterator;
@@ -8,11 +8,11 @@ use Countable;
 use IteratorAggregate;
 
 // External libs
-use SimpleRoute\Exceptions\Node\NodeChildIsNotANodeException;
-use SimpleRoute\Exceptions\Node\NodeChildKeyMismatchException;
-use SimpleRoute\Exceptions\Node\NodeHandlerNotSetException;
-use SimpleRoute\Exceptions\Node\NodeKeyIsEmptyException;
-use SimpleRoute\Exceptions\Node\NodeSelfReferenceException;
+use AkidoLd\SimpleRoute\Exceptions\Node\NodeChildIsNotANodeException;
+use AkidoLd\SimpleRoute\Exceptions\Node\NodeChildKeyMismatchException;
+use AkidoLd\SimpleRoute\Exceptions\Node\NodeHandlerNotSetException;
+use AkidoLd\SimpleRoute\Exceptions\Node\NodeKeyIsEmptyException;
+use AkidoLd\SimpleRoute\Exceptions\Node\NodeSelfReferenceException;
 
 /**
  * Represents a node in a routing tree.

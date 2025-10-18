@@ -1,6 +1,6 @@
 <?php
 
-namespace SimpleRoute\Exceptions\UriSlicer;
+namespace AkidoLd\SimpleRoute\Exceptions\UriSlicer;
 
 use Exception;
 

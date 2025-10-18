@@ -1,10 +1,10 @@
 <?php
 
-namespace SimpleRoute\Router;
+namespace AkidoLd\SimpleRoute\Router;
 
-use SimpleRoute\Exceptions\NodeTree\NodeIsRootNodeException;
-use SimpleRoute\Exceptions\NodeTree\NodeNotInTreeException;
-use SimpleRoute\Exceptions\NodeTree\NodeOutOfTreeException;
+use AkidoLd\SimpleRoute\Exceptions\NodeTree\NodeIsRootNodeException;
+use AkidoLd\SimpleRoute\Exceptions\NodeTree\NodeNotInTreeException;
+use AkidoLd\SimpleRoute\Exceptions\NodeTree\NodeOutOfTreeException;
 
 class NodeTree {
 

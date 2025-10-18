@@ -1,6 +1,6 @@
 <?php
 
-namespace SimpleRoute\Exceptions\Node;
+namespace AkidoLd\SimpleRoute\Exceptions\Node;
 
 use Exception;
 
