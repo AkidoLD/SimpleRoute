@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ## [1.1.1] - 2025-10-18
+### Changed
+- Update examples. Change `demo.php` to `index.php` for simplify the demo launch
+
 ### Removed
 - Removed `utils` because it is not used
 

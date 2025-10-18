@@ -2,10 +2,10 @@
 
 require_once __DIR__."/../vendor/autoload.php";
 
-use SimpleRoute\Router\Node;
-use SimpleRoute\Router\NodeTree;
-use SimpleRoute\Router\Router;
-use SimpleRoute\Router\UriSlicer;
+use AkidoLd\SimpleRoute\Router\Node;
+use AkidoLd\SimpleRoute\Router\NodeTree;
+use AkidoLd\SimpleRoute\Router\Router;
+use AkidoLd\SimpleRoute\Router\UriSlicer;
 
 // ========================================
 // FAKE DATA
@@ -329,7 +329,7 @@ echo '<div style="background: white; padding: 30px; border-radius: 8px; box-shad
 
 // Le Router gère automatiquement le matching et l'exécution du handler
 $router = new Router($nodeTree, $errorHandler);
-$router->makeRoute($slicer);
+$router->dispatch($slicer);
 
 echo '</div>';
 echo '</div>';
